@@ -104,7 +104,7 @@ echo "# Test config" > test_config/configuration.yaml
 export HA_CONFIG_DIR="./test_config"
 export BACKUP_DIR="./backups"
 export OPENAI_API_KEY="sk-your-key-here"
-export OPENAI_MODEL="gpt-5-mini"
+export OPENAI_MODEL="gpt-6-luna"
 export LOG_LEVEL="debug"
 
 # Run development server
@@ -130,9 +130,9 @@ openai_api_key: "sk-your-openai-api-key"
 #### Full Configuration
 
 ```yaml
-openai_api_url: "https://generativelanguage.googleapis.com/v1beta/openai/"
+openai_api_url: "https://api.openai.com/v1"
 openai_api_key: "your-api-key"
-openai_model: "gemini-2.5-flash"
+openai_model: "gpt-6-luna"
 log_level: "info"
 system_prompt_file: ""
 temperature: ""
@@ -144,9 +144,9 @@ usage_tracking: "stream_options"
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `openai_api_url` | URL | `https://generativelanguage.googleapis.com/v1beta/openai/` | API endpoint URL (Google Cloud default, can be changed to any OpenAI-compatible provider) |
+| `openai_api_url` | URL | `https://api.openai.com/v1` | API base URL (OpenAI default, can be changed to any compatible provider) |
 | `openai_api_key` | Password | *Required* | API authentication key |
-| `openai_model` | String | `gemini-2.5-flash` | Model identifier to use |
+| `openai_model` | String | `gpt-6-luna` | Model identifier to use |
 | `log_level` | List | `info` | Logging level: `debug`, `info`, `warning`, `error` |
 | `system_prompt_file` | String | `""` (empty) | Optional: Path to custom system prompt file (relative to `/config`) |
 | `temperature` | String | `""` (empty) | Optional: Model temperature (0.0-2.0). Lower=more focused, higher=more creative. Empty uses model default |
@@ -155,17 +155,23 @@ usage_tracking: "stream_options"
 
 ### AI Provider Setup
 
-The add-on supports any OpenAI-compatible API endpoint. The default configuration uses Google Cloud's Gemini API, but you can easily switch to any other provider.
+The add-on defaults to OpenAI with `gpt-6-luna`. GPT-6 models use the `/responses`
+endpoint; leave the base URL as `https://api.openai.com/v1`, without appending
+`/responses`. Other model IDs continue to use `/chat/completions`.
+Responses usage is included automatically unless tracking is disabled, and
+Anthropic-specific cache control is not sent. Existing installations retain
+their saved settings; switching requires selecting `gpt-6-luna`, the OpenAI
+base URL, and an API key with access to that model.
 
-#### Google Cloud (Default)
+#### Google Cloud
 
 **Best for:** Fast responses, cost-effective, high quality
 
-The add-on is configured by default to use Google Cloud's Gemini API.
+To use Google Cloud's Gemini API instead of OpenAI:
 
 1. Sign up at https://aistudio.google.com/
 2. Create an API key
-3. The default configuration should work:
+3. Configure the add-on:
    ```yaml
    openai_api_url: "https://generativelanguage.googleapis.com/v1beta/openai/"
    openai_api_key: "your-google-api-key"
@@ -174,7 +180,7 @@ The add-on is configured by default to use Google Cloud's Gemini API.
    ```
 
 **Recommended models:**
-- `gemini-2.5-flash` - Default, best balance of speed and quality
+- `gemini-2.5-flash` - Balance of speed and quality
 - `gemini-2.0-flash-exp` - Experimental, cutting-edge features
 - `gemini-2.5-pro` - Higher quality, longer context
 - `gemini-1.5-flash` - Faster, lower cost
@@ -189,11 +195,12 @@ The add-on is configured by default to use Google Cloud's Gemini API.
    ```yaml
    openai_api_url: "https://api.openai.com/v1"
    openai_api_key: "sk-proj-your-key-here"
-   openai_model: "gpt-4o"
+   openai_model: "gpt-6-luna"
    usage_tracking: "stream_options"
    ```
 
 **Recommended models:**
+- `gpt-6-luna` - Default; uses the Responses API
 - `gpt-5-mini` - Best seed and cost but requires validation
 - `gpt-4o` - Best balance of speed and quality without validation
 - `gpt-4o-mini` - Faster, lower cost
@@ -832,7 +839,7 @@ EOF
 export HA_CONFIG_DIR="./test_config"
 export BACKUP_DIR="./backups"
 export OPENAI_API_KEY="sk-your-key-here"
-export OPENAI_MODEL="gpt-4o"
+export OPENAI_MODEL="gpt-6-luna"
 export LOG_LEVEL="debug"
 export SYSTEM_PROMPT_FILE=""  # Optional: path to custom prompt file
 

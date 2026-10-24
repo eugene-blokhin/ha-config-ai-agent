@@ -22,6 +22,7 @@ from .const import (
     CONF_SYSTEM_PROMPT_FILE,
     CONF_ENABLE_CACHE_CONTROL,
     CONF_USAGE_TRACKING,
+    DEFAULT_MODEL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,7 +85,7 @@ async def _start_server(hass: HomeAssistant, entry: ConfigEntry) -> None:
     config = entry.data
     os.environ["OPENAI_API_KEY"] = config.get(CONF_API_KEY, "")
     os.environ["OPENAI_API_URL"] = config.get(CONF_API_URL, "https://api.openai.com/v1")
-    os.environ["OPENAI_MODEL"] = config.get(CONF_MODEL, "gpt-4o")
+    os.environ["OPENAI_MODEL"] = config.get(CONF_MODEL, DEFAULT_MODEL)
     os.environ["HA_CONFIG_DIR"] = hass.config.config_dir
     os.environ["BACKUP_DIR"] = os.path.join(hass.config.config_dir, ".ai_agent_backups")
     os.environ["LOG_LEVEL"] = config.get(CONF_LOG_LEVEL, "info")

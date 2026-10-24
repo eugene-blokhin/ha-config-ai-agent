@@ -45,9 +45,9 @@ privileged: []
 
 # User-configurable options
 options:
-  openai_api_url: "https://generativelanguage.googleapis.com/v1beta/openai/"
+  openai_api_url: "https://api.openai.com/v1"
   openai_api_key: ""
-  openai_model: "gemini-2.5-flash" # Best model for speed and price
+  openai_model: "gpt-6-luna"
   log_level: "info"
   system_prompt_file: ""
   temperature: ""

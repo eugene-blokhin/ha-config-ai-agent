@@ -21,6 +21,12 @@ An AI-powered Home Assistant configuration assistant with approval workflow.
    - Search "AI Configuration Agent"
    - Enter API key and settings
 
+The default model is `gpt-6-luna`, using OpenAI's `/responses` endpoint.
+Keep the API base URL as `https://api.openai.com/v1` (do not append `/responses`).
+Existing model/provider settings are preserved; select `gpt-6-luna` explicitly to
+switch an existing installation, using an API key with access to that model.
+Other model IDs continue to use `/chat/completions`.
+
 # Features
 * 🤖 **Natural Language Interface** - No YAML expertise required
 * ✅ **Approval Workflow** - Review visual diffs before applying changes

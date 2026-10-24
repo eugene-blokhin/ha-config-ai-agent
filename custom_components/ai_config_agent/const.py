@@ -16,6 +16,6 @@ CONF_USAGE_TRACKING = "usage_tracking"
 
 # Default values
 DEFAULT_API_URL = "https://api.openai.com/v1"
-DEFAULT_MODEL = "gpt-4o"
+DEFAULT_MODEL = "gpt-6-luna"
 DEFAULT_LOG_LEVEL = "info"
 DEFAULT_USAGE_TRACKING = "stream_options"

@@ -40,9 +40,9 @@ openai_api_key: "sk-your-openai-key-here"
 
 **Full Configuration:**
 ```yaml
-openai_api_url: "https://generativelanguage.googleapis.com/v1beta/openai/"
-openai_api_key: "your-google-api-key-here"
-openai_model: "gemini-2.5-flash"
+openai_api_url: "https://api.openai.com/v1"
+openai_api_key: "your-openai-api-key-here"
+openai_model: "gpt-6-luna"
 log_level: "info"
 system_prompt_file: ""  # Optional: Custom system prompt file path
 temperature: ""  # Optional: Model temperature (0.0-2.0, empty=default)
@@ -50,15 +50,22 @@ enable_cache_control: false  # Enable prompt caching (Anthropic Claude only)
 usage_tracking: "stream_options"  # Token usage method: stream_options, usage, or disabled
 ```
 
-### Alternative AI Providers
+GPT-6 models, including the default `gpt-6-luna`, use `/responses`; keep the base
+URL above without appending `/responses`. Other models retain `/chat/completions`.
+Responses usage is reported automatically unless `usage_tracking` is `disabled`;
+Anthropic-specific cache control is not sent to this endpoint.
+Existing installations keep their saved model and provider. To switch, select
+`gpt-6-luna`, use the OpenAI base URL, and supply a key with access to that model.
+
+### AI Providers
 
 <details>
-<summary><b>OpenAI</b> (GPT-5, GPT-4o)</summary>
+<summary><b>OpenAI</b> (GPT-6 Luna, GPT-5, GPT-4o)</summary>
 
 ```yaml
 openai_api_url: "https://api.openai.com/v1"
 openai_api_key: "sk-proj-your-key-here"
-openai_model: "gpt-4o"
+openai_model: "gpt-6-luna"
 usage_tracking: "stream_options"
 ```
 </details>
