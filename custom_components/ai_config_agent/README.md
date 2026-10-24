@@ -25,7 +25,7 @@ This is the HACS-installable custom component version of the AI Configuration Ag
    - Enter your configuration:
      - **API Key:** Your OpenAI-compatible API key
      - **API URL:** API endpoint (default: `https://api.openai.com/v1`)
-     - **Model:** Model name (e.g., `gpt-4o`, `gemini-2.5-flash`)
+     - **Model:** Model name (default: `gpt-6-luna`; alternatives include `gpt-4o`, `gemini-2.5-flash`)
      - **Log Level:** Logging verbosity (info, debug, warning, error)
      - **Temperature:** (Optional) Model temperature for creativity
      - **System Prompt File:** (Optional) Custom system prompt file path

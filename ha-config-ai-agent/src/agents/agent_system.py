@@ -6,6 +6,7 @@ from ..agents.tools import AgentTools
 from ..config import ConfigurationManager
 from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
+from types import SimpleNamespace
 
 
 logger = logging.getLogger(__name__)
@@ -61,7 +62,7 @@ class AgentSystem:
                 base_url=os.getenv('OPENAI_API_URL', 'https://api.openai.com/v1')
             )
 
-        self.model = os.getenv('OPENAI_MODEL', 'gpt-4o')
+        self.model = os.getenv('OPENAI_MODEL', 'gpt-6-luna')
 
         # Get temperature from environment variable, use None if not specified
         temperature_str = os.getenv('TEMPERATURE')
@@ -126,6 +127,91 @@ Response Style:
 - Ask clarifying questions if request is ambiguous
 
 Remember: You're helping manage a production Home Assistant system. Safety and clarity are paramount."""
+
+    @staticmethod
+    def _responses_input(messages):
+        """Translate stored chat history to Responses API input items."""
+        items = []
+        for message in messages:
+            if message["role"] == "tool":
+                items.append({
+                    "type": "function_call_output",
+                    "call_id": message["tool_call_id"],
+                    "output": message["content"]
+                })
+                continue
+            if message.get("content"):
+                items.append({"role": message["role"], "content": message["content"]})
+            for call in message.get("tool_calls", []):
+                items.append({
+                    "type": "function_call",
+                    "call_id": call["id"],
+                    "name": call["function"]["name"],
+                    "arguments": call["function"]["arguments"]
+                })
+        return items
+
+    async def _stream_responses(self, input_items, tools):
+        """Adapt Responses events to the existing streaming/tool workflow."""
+        params = {
+            "model": self.model,
+            "input": input_items,
+            "tools": [
+                {"type": "function", **tool["function"], "strict": False}
+                for tool in tools
+            ],
+            "tool_choice": "auto",
+            "stream": True,
+            "store": False,
+            "include": ["reasoning.encrypted_content"]
+        }
+        if self.temperature is not None:
+            params["temperature"] = self.temperature
+        stream = await self.client.responses.create(**params)
+        tool_index = 0
+        completed = False
+        try:
+            async for event in stream:
+                content = None
+                tool_calls = None
+                usage = None
+                if event.type in ("response.output_text.delta", "response.refusal.delta"):
+                    content = event.delta
+                elif event.type == "response.output_item.done" and event.item.type == "function_call":
+                    tool_calls = [SimpleNamespace(
+                        index=tool_index,
+                        id=event.item.call_id,
+                        function=SimpleNamespace(name=event.item.name, arguments=event.item.arguments)
+                    )]
+                    tool_index += 1
+                elif event.type == "response.completed":
+                    completed = True
+                    # Retain reasoning and function calls for stateless tool continuations.
+                    input_items.extend(item.model_dump(exclude_none=True) for item in event.response.output)
+                    if self.usage_tracking != "disabled" and event.response.usage:
+                        response_usage = event.response.usage
+                        usage = SimpleNamespace(
+                            input_tokens=response_usage.input_tokens,
+                            output_tokens=response_usage.output_tokens,
+                            cached_tokens=getattr(response_usage.input_tokens_details, "cached_tokens", 0),
+                            prompt_tokens=0,
+                            completion_tokens=0
+                        )
+                elif event.type in ("error", "response.failed", "response.incomplete"):
+                    raise RuntimeError("Responses API did not complete the response")
+                else:
+                    continue
+                yield SimpleNamespace(
+                    choices=[SimpleNamespace(
+                        delta=SimpleNamespace(content=content, tool_calls=tool_calls),
+                        finish_reason=None
+                    )],
+                    usage=usage
+                )
+            if not completed:
+                raise RuntimeError("Responses API stream ended before completion")
+        finally:
+            await stream.close()
 
     async def chat_stream(
         self,
@@ -260,6 +346,8 @@ Remember: You're helping manage a production Home Assistant system. Safety and c
             total_input_tokens = 0
             total_output_tokens = 0
             total_cached_tokens = 0
+            use_responses = self.model == "gpt-6" or self.model.startswith("gpt-6-")
+            responses_input = self._responses_input(messages) if use_responses else []
 
             while iteration < max_iterations:
                 iteration += 1
@@ -285,7 +373,10 @@ Remember: You're helping manage a production Home Assistant system. Safety and c
                 if self.temperature is not None:
                     api_params["temperature"] = self.temperature
 
-                stream = await self.client.chat.completions.create(**api_params)
+                if use_responses:
+                    stream = self._stream_responses(responses_input, tools)
+                else:
+                    stream = await self.client.chat.completions.create(**api_params)
 
                 # Accumulate the streaming response
                 accumulated_content = ""
@@ -475,6 +566,8 @@ Remember: You're helping manage a production Home Assistant system. Safety and c
                         tool_message["cache_control"] = {"type": "ephemeral"}
 
                     messages.append(tool_message)
+                    if use_responses:
+                        responses_input.extend(self._responses_input([tool_message]))
                     new_messages.append(tool_message)
 
                     # Notify about tool result immediately after execution

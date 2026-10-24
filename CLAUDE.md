@@ -195,7 +195,7 @@ Set via `config.yaml` options or `.env` file for local development:
 |----------|-------------|---------|
 | `OPENAI_API_KEY` | OpenAI API key or compatible | (required) |
 | `OPENAI_API_URL` | API endpoint URL | `https://api.openai.com/v1` |
-| `OPENAI_MODEL` | Model to use | `gpt-4o` |
+| `OPENAI_MODEL` | Model to use | `gpt-6-luna` |
 | `HA_CONFIG_DIR` | Home Assistant config path | `/config` |
 | `BACKUP_DIR` | Backup storage path | `/backup` |
 | `LOG_LEVEL` | Logging level | `info` |
@@ -347,7 +347,7 @@ pip install -r requirements.txt
 export HA_CONFIG_DIR="./test_config"
 export BACKUP_DIR="./backups"
 export OPENAI_API_KEY="your-key-here"
-export OPENAI_MODEL="gpt-4o"
+export OPENAI_MODEL="gpt-6-luna"
 export LOG_LEVEL="debug"
 
 # Run development server

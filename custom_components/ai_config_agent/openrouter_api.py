@@ -64,11 +64,11 @@ def calculate_cost(model_id: str, input_tokens: int, output_tokens: int) -> floa
         _LOGGER.warning("Cost information not found for model: %s", model_id)
         return 0.0
 
-    input_cost_per_million = model_info.get("pricing", {}).get("prompt", 0)
-    output_cost_per_million = model_info.get("pricing", {}).get("completion", 0)
+    input_cost_per_token = float(model_info.get("pricing", {}).get("prompt", 0))
+    output_cost_per_token = float(model_info.get("pricing", {}).get("completion", 0))
 
-    input_cost = (input_tokens / 1_000_000) * input_cost_per_million
-    output_cost = (output_tokens / 1_000_000) * output_cost_per_million
+    input_cost = input_tokens * input_cost_per_token
+    output_cost = output_tokens * output_cost_per_token
 
     total_cost = input_cost + output_cost
     _LOGGER.debug("Calculated cost for model %s: input_tokens=%d, output_tokens=%d, total_cost=%f",
