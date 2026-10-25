@@ -171,6 +171,7 @@ Remember: You're helping manage a production Home Assistant system. Safety and c
             params["temperature"] = self.temperature
         stream = await self.client.responses.create(**params)
         tool_index = 0
+        completed_tool_calls = []
         completed = False
         try:
             async for event in stream:
@@ -180,11 +181,11 @@ Remember: You're helping manage a production Home Assistant system. Safety and c
                 if event.type in ("response.output_text.delta", "response.refusal.delta"):
                     content = event.delta
                 elif event.type == "response.output_item.done" and event.item.type == "function_call":
-                    tool_calls = [SimpleNamespace(
+                    completed_tool_calls.append(SimpleNamespace(
                         index=tool_index,
                         id=event.item.call_id,
                         function=SimpleNamespace(name=event.item.name, arguments=event.item.arguments)
-                    )]
+                    ))
                     tool_index += 1
                 elif event.type == "response.completed":
                     completed = True
@@ -212,6 +213,14 @@ Remember: You're helping manage a production Home Assistant system. Safety and c
                 )
             if not completed:
                 raise RuntimeError("Responses API stream ended before completion")
+            if completed_tool_calls:
+                yield SimpleNamespace(
+                    choices=[SimpleNamespace(
+                        delta=SimpleNamespace(content=None, tool_calls=completed_tool_calls),
+                        finish_reason=None
+                    )],
+                    usage=None
+                )
         finally:
             await stream.close()
 
